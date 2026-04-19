@@ -1,0 +1,1713 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Golf Pro AI | Chippingdales</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Golf Pro AI">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#d4af37">
+<meta name="mobile-web-app-capable" content="yes">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════
+   DESIGN TOKENS – identisch Chippingdales
+══════════════════════════════════════ */
+:root {
+  --gold: #d4af37;
+  --gold-gradient: linear-gradient(135deg, #af9035, #fcf6ba, #d4af37);
+  --bg:     #030303;
+  --card:   #0f0f0f;
+  --border: #222222;
+  --text:   #ffffff;
+  --muted:  #555555;
+  --red:    #ff4d4d;
+  --green:  #2ecc71;
+}
+
+*   { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  height: 100vh;
+  -webkit-tap-highlight-color: transparent;
+}
+.hidden { display: none !important; }
+
+/* ── SCREENS ── */
+.screen {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
+  background: var(--bg);
+  z-index: 10;
+}
+
+/* ══════════════════════════════════════
+   LANDING SCREEN
+══════════════════════════════════════ */
+#screen-landing {
+  align-items: center; justify-content: center;
+  overflow-y: auto;
+}
+.landing-glow {
+  position: fixed; top: 25%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 320px; height: 320px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(212,175,55,0.07) 0%, transparent 70%);
+  pointer-events: none;
+}
+.landing-content {
+  position: relative; z-index: 1;
+  width: 90%; max-width: 360px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 18px;
+  padding: 32px 0 24px;
+}
+.landing-logo-wrap {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 10px;
+}
+.landing-logo {
+  width: 100px;
+  filter: drop-shadow(0 0 22px rgba(212,175,55,0.35));
+  animation: logo-pulse 3s ease-in-out infinite;
+}
+@keyframes logo-pulse {
+  0%,100% { filter: drop-shadow(0 0 18px rgba(212,175,55,0.2)); }
+  50%      { filter: drop-shadow(0 0 34px rgba(212,175,55,0.5)); }
+}
+.tagline-block {
+  display: flex; align-items: center; gap: 10px;
+}
+.tagline-line  { width: 24px; height: 1px; background: var(--gold); opacity: 0.4; }
+.tagline-text  { font-size: 0.37rem; letter-spacing: 3px; color: var(--gold); font-weight: 600; white-space: nowrap; }
+
+.landing-cards {
+  width: 100%;
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+.lcard {
+  width: 100%; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 7px;
+  background: var(--card); border-radius: 12px;
+  padding: 11px 7px; border: 1px solid #1e1e1e;
+  cursor: pointer; text-align: center;
+  transition: transform 0.15s, border-color 0.15s;
+  min-height: 68px;
+}
+.lcard:active { transform: scale(0.97); }
+.lcard-icon  { font-size: 1.5rem; color: var(--gold); }
+.lcard-title { font-size: 0.60rem; font-weight: 800; color: #fff; letter-spacing: 1px; }
+.lcard-sub   { font-size: 0.44rem; color: #555; line-height: 1.3; }
+
+/* einzelne Karten-Farben */
+.lcard--single  { border-color: var(--gold); background: linear-gradient(135deg,#1a1500,#0f0f0f); }
+.lcard--single  .lcard-icon { color: var(--gold); }
+.lcard--multi   { border-color: #ff4d4d; background: linear-gradient(135deg,#1a0000,#0f0f0f); }
+.lcard--multi   .lcard-icon { color: #ff4d4d; }
+.lcard--upload  { border-color: #4db6ac; background: linear-gradient(135deg,#001a18,#0f0f0f); }
+.lcard--upload  .lcard-icon { color: #4db6ac; }
+.lcard--history { border-color: #ab47bc; background: linear-gradient(135deg,#150020,#0f0f0f); }
+.lcard--history .lcard-icon { color: #ab47bc; }
+
+.landing-footer { font-size: 0.35rem; color: #333; letter-spacing: 2px; text-transform: uppercase; }
+
+/* ══════════════════════════════════════
+   APP HEADER (alle Screens)
+══════════════════════════════════════ */
+.app-header {
+  height: 56px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 14px;
+  background: #000; border-bottom: 1px solid #1a1a1a;
+}
+.header-left  { display: flex; align-items: center; gap: 10px; }
+.header-right { display: flex; align-items: center; }
+.logo-small   { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+.screen-title { font-size: 0.65rem; font-weight: 800; color: var(--gold); letter-spacing: 2px; }
+.btn-back {
+  background: transparent; border: 1px solid #2a2a2a;
+  color: #888; padding: 6px 12px; border-radius: 6px;
+  font-size: 0.58rem; font-weight: 700; cursor: pointer;
+  text-transform: uppercase; letter-spacing: 1px;
+}
+.btn-back:active { background: #1a1a1a; }
+
+/* ══════════════════════════════════════
+   SCROLL BODY
+══════════════════════════════════════ */
+.scroll-body {
+  flex: 1; overflow-y: auto;
+  padding: 14px 14px 24px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ══════════════════════════════════════
+   FORM ELEMENTS
+══════════════════════════════════════ */
+.form-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px; margin-bottom: 14px;
+  position: relative; overflow: hidden;
+}
+.form-card::before {
+  content: ''; position: absolute;
+  top: 0; left: 0; right: 0; height: 2px;
+  background: var(--gold-gradient);
+}
+.fc-title {
+  font-size: 0.62rem; font-weight: 800;
+  color: var(--gold); letter-spacing: 2px;
+  text-transform: uppercase; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.fc-title::after { content: ''; flex: 1; height: 1px; background: #222; }
+
+.field-row  { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.field-row4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+@media(max-width:380px) {
+  .field-row4 { grid-template-columns: 1fr 1fr; }
+}
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field label {
+  font-size: 0.52rem; text-transform: uppercase;
+  letter-spacing: 1.5px; color: #555; font-weight: 600;
+}
+.field input, .field select {
+  background: #0a0a0a; border: 1px solid #2a2a2a;
+  border-radius: 7px; color: var(--text);
+  padding: 9px 10px; font-family: 'Inter', sans-serif;
+  font-size: 0.82rem; width: 100%;
+  -moz-appearance: textfield; transition: border-color .2s;
+}
+.field input::-webkit-outer-spin-button,
+.field input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.field input:focus, .field select:focus {
+  outline: none; border-color: var(--gold);
+}
+
+/* ── BUTTONS ── */
+.btn-gold {
+  width: 100%; padding: 14px;
+  background: var(--gold-gradient);
+  color: #000; border: none; border-radius: 10px;
+  font-size: 0.78rem; font-weight: 800;
+  cursor: pointer; letter-spacing: 1px;
+  text-transform: uppercase;
+  font-family: 'Inter', sans-serif;
+  margin-top: 12px;
+  transition: opacity .2s;
+}
+.btn-gold:active { opacity: 0.85; }
+.btn-ghost-sm {
+  background: transparent; border: 1px solid #2a2a2a;
+  color: #888; border-radius: 7px;
+  padding: 5px 10px; font-size: 0.56rem;
+  font-weight: 700; cursor: pointer;
+  text-transform: uppercase; letter-spacing: 1px;
+}
+.btn-ghost-sm:active { background: #1a1a1a; }
+.btn-red-sm {
+  background: transparent; border: 1px solid var(--red);
+  color: var(--red); border-radius: 7px;
+  padding: 5px 10px; font-size: 0.56rem;
+  font-weight: 700; cursor: pointer;
+  text-transform: uppercase; letter-spacing: 1px;
+}
+
+/* ── ALERT ── */
+.alert {
+  border-radius: 8px; padding: 10px 14px;
+  font-size: 0.72rem; margin-top: 10px; display: none;
+}
+.alert-err { background: rgba(255,77,77,.08); border: 1px solid rgba(255,77,77,.25); color: var(--red); }
+.alert-ok  { background: rgba(46,204,113,.08); border: 1px solid rgba(46,204,113,.25); color: var(--green); }
+
+/* ── LOADING ── */
+.loading-wrap {
+  display: none; text-align: center; padding: 50px 20px;
+}
+.spinner {
+  width: 40px; height: 40px;
+  border: 2px solid #1a1a1a;
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  margin: 0 auto 14px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-txt {
+  font-size: 0.6rem; letter-spacing: 3px;
+  text-transform: uppercase; color: #444;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:.3}50%{opacity:1} }
+
+/* ── UPLOAD ZONE ── */
+.upload-zone {
+  border: 1px dashed #2a2a2a; border-radius: 10px;
+  padding: 28px 14px; text-align: center; cursor: pointer;
+  transition: border-color .2s, background .2s;
+  margin-bottom: 12px;
+}
+.upload-zone:active, .upload-zone.drag {
+  border-color: var(--gold);
+  background: rgba(212,175,55,.04);
+}
+.upload-zone input { display: none; }
+.uz-icon  { font-size: 1.8rem; margin-bottom: 8px; }
+.uz-title {
+  font-size: 0.7rem; font-weight: 800;
+  color: var(--gold); letter-spacing: 2px;
+  text-transform: uppercase; margin-bottom: 4px;
+}
+.uz-sub { font-size: 0.6rem; color: #444; }
+.upload-preview {
+  display: none; background: #0a0a0a;
+  border: 1px solid rgba(212,175,55,.2);
+  border-left: 3px solid var(--gold);
+  border-radius: 8px; padding: 10px 13px;
+  font-size: 0.68rem; color: var(--gold); margin-bottom: 10px;
+}
+.upload-preview strong {
+  display: block; font-size: 0.55rem;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: #555; margin-bottom: 4px;
+}
+
+/* ── MULTI SHOT SLOTS ── */
+.shot-slot {
+  background: #0a0a0a; border: 1px solid #1e1e1e;
+  border-radius: 10px; padding: 13px; margin-bottom: 10px;
+}
+.slot-hd {
+  display: flex; justify-content: space-between;
+  align-items: center; margin-bottom: 10px;
+}
+.slot-label {
+  font-size: 0.58rem; font-weight: 800;
+  color: var(--gold); letter-spacing: 2px; text-transform: uppercase;
+}
+.btn-add-slot {
+  width: 100%; background: transparent;
+  border: 1px dashed #2a2a2a; color: #444;
+  border-radius: 8px; padding: 11px;
+  font-size: 0.68rem; cursor: pointer;
+  transition: all .2s; margin-bottom: 12px;
+  font-family: 'Inter', sans-serif;
+}
+.btn-add-slot:active { border-color: var(--gold); color: var(--gold); }
+
+/* ══════════════════════════════════════
+   RESULTS
+══════════════════════════════════════ */
+.result-section { animation: fadeup .4s ease forwards; }
+@keyframes fadeup { from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)} }
+
+/* Score */
+.score-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px; margin-bottom: 12px;
+  position: relative; overflow: hidden;
+}
+.score-card::before {
+  content: ''; position: absolute;
+  top: 0; left: 0; right: 0; height: 2px;
+  background: var(--gold-gradient);
+}
+.score-row {
+  display: flex; align-items: center;
+  gap: 16px; margin-bottom: 16px;
+}
+.score-circle {
+  width: 76px; height: 76px; border-radius: 50%;
+  border: 2px solid var(--gold); flex-shrink: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: rgba(212,175,55,.04);
+}
+.score-num {
+  font-size: 1.8rem; font-weight: 800;
+  color: var(--gold); line-height: 1;
+}
+.score-lbl {
+  font-size: 0.45rem; color: #555;
+  letter-spacing: 1px; text-transform: uppercase;
+}
+.score-info h2 { font-size: 0.82rem; font-weight: 800; margin-bottom: 4px; }
+.score-info p  { font-size: 0.7rem; color: #888; line-height: 1.6; }
+
+/* Metrics */
+.metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.metric-item {
+  background: #080808; border: 1px solid #1a1a1a;
+  border-radius: 8px; padding: 10px 12px;
+}
+.metric-head {
+  display: flex; justify-content: space-between;
+  align-items: center; margin-bottom: 6px;
+}
+.metric-name { font-size: 0.52rem; color: #444; text-transform: uppercase; letter-spacing: 1.5px; }
+.metric-val  { font-size: 0.82rem; font-weight: 800; }
+.mbar { height: 3px; background: #1a1a1a; border-radius: 2px; overflow: hidden; margin-bottom: 4px; }
+.mfill { height: 100%; border-radius: 2px; transition: width 1.2s cubic-bezier(.22,1,.36,1); }
+.metric-note { font-size: 0.55rem; color: #444; }
+.c-good{color:var(--green)}.c-ok{color:#ffa726}.c-bad{color:var(--red)}
+.f-good{background:var(--green)}.f-ok{background:#ffa726}.f-bad{background:var(--red)}
+
+/* Tips */
+.tip-card {
+  background: var(--card); border: 1px solid #1a1a1a;
+  border-left: 3px solid var(--gold);
+  border-radius: 0 10px 10px 0;
+  padding: 13px 14px; margin-bottom: 10px;
+  animation: fadeup .4s ease both;
+}
+.tip-card:nth-child(1){border-left-color:var(--gold);animation-delay:.05s}
+.tip-card:nth-child(2){border-left-color:#ff4d4d;animation-delay:.1s}
+.tip-card:nth-child(3){border-left-color:#ffa726;animation-delay:.15s}
+.tip-card:nth-child(4){border-left-color:#4db6ac;animation-delay:.2s}
+.tip-head { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+.tip-icon  { font-size: 0.9rem; }
+.tip-title {
+  font-size: 0.68rem; font-weight: 800;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--gold);
+}
+.tip-body  { font-size: 0.72rem; color: #888; line-height: 1.65; }
+.tip-drill {
+  margin-top: 8px; background: #080808;
+  border-left: 2px solid #333; border-radius: 0 6px 6px 0;
+  padding: 8px 10px; font-size: 0.65rem; color: #666;
+}
+.tip-drill strong { color: var(--gold); }
+
+/* Plan */
+.plan-week {
+  background: var(--card); border: 1px solid #1a1a1a;
+  border-radius: 10px; padding: 14px; margin-bottom: 10px;
+}
+.week-hd { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.week-title {
+  font-size: 0.68rem; font-weight: 800;
+  color: var(--gold); letter-spacing: 3px; text-transform: uppercase;
+}
+.week-badge {
+  background: rgba(212,175,55,.08);
+  border: 1px solid rgba(212,175,55,.2);
+  border-radius: 5px; padding: 2px 8px;
+  font-size: 0.52rem; color: var(--gold);
+  font-weight: 700; letter-spacing: 1px;
+}
+.day-row {
+  display: flex; gap: 10px; padding: 6px 0;
+  border-bottom: 1px solid #111;
+  align-items: flex-start; font-size: 0.68rem;
+}
+.day-row:last-child { border-bottom: none; }
+.day-name  { color: var(--gold); font-weight: 800; min-width: 28px; }
+.day-task  { flex: 1; color: #888; line-height: 1.5; }
+.day-dur   { color: #444; white-space: nowrap; }
+
+/* Compare Table */
+.cmp-wrap { overflow-x: auto; }
+.cmp-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 0.65rem; min-width: 380px;
+}
+.cmp-table th {
+  font-size: 0.52rem; text-transform: uppercase;
+  letter-spacing: 1.5px; color: #555;
+  padding: 8px 10px; text-align: left;
+  border-bottom: 1px solid #1a1a1a;
+}
+.cmp-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #0a0a0a;
+  color: #888;
+}
+.cmp-table .best-row td { background: rgba(212,175,55,.04); }
+.cmp-table .best { color: var(--gold); font-weight: 800; }
+
+/* History items */
+.hist-item {
+  background: var(--card); border: 1px solid #1a1a1a;
+  border-radius: 10px; padding: 13px 14px;
+  margin-bottom: 8px; cursor: pointer;
+  display: flex; justify-content: space-between;
+  align-items: center; transition: border-color .2s;
+}
+.hist-item:active { border-color: var(--gold); }
+.hist-title { font-size: 0.72rem; font-weight: 700; margin-bottom: 3px; }
+.hist-meta  { font-size: 0.58rem; color: #444; }
+.hist-score { font-size: 1.4rem; font-weight: 800; line-height: 1; }
+.hist-right { display: flex; align-items: center; gap: 8px; }
+
+.sec-label {
+  font-size: 0.58rem; font-weight: 800;
+  color: var(--gold); letter-spacing: 3px;
+  text-transform: uppercase; margin-bottom: 10px;
+  margin-top: 4px;
+  display: flex; align-items: center; gap: 8px;
+}
+.sec-label::after { content: ''; flex: 1; height: 1px; background: #1a1a1a; }
+
+.empty-state {
+  text-align: center; padding: 40px 20px;
+  font-size: 0.68rem; color: #333;
+}
+
+/* API BAR */
+.api-bar {
+  background: #080808; border: 1px solid #1a1a1a;
+  border-radius: 10px; padding: 13px 14px; margin-bottom: 14px;
+}
+.api-row {
+  display: flex; gap: 10px; align-items: center;
+  flex-wrap: wrap; margin-bottom: 6px;
+}
+.api-row label {
+  font-size: 0.52rem; text-transform: uppercase;
+  letter-spacing: 2px; color: #555; white-space: nowrap;
+}
+.api-row input {
+  flex: 1; min-width: 160px; background: var(--bg);
+  border: 1px solid #2a2a2a; border-radius: 7px;
+  color: var(--text); padding: 8px 12px;
+  font-family: 'Inter', sans-serif; font-size: 0.75rem;
+  transition: border-color .2s;
+}
+.api-row input:focus { outline: none; border-color: var(--gold); }
+.api-hint { font-size: 0.55rem; color: #444; }
+.api-hint a { color: var(--gold); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     SCREEN: LANDING
+══════════════════════════════════════════ -->
+<div id="screen-landing" class="screen" style="align-items:center;justify-content:center;overflow-y:auto;">
+  <div class="landing-glow"></div>
+  <div class="landing-content">
+
+    <div class="landing-logo-wrap">
+      <img src="logo_chipping.png" alt="Chippingdales" class="landing-logo">
+      <div class="tagline-block">
+        <span class="tagline-line"></span>
+        <span class="tagline-text">GOLF PRO AI TRAINER</span>
+        <span class="tagline-line"></span>
+      </div>
+    </div>
+
+    <div class="landing-cards">
+      <button class="lcard lcard--single" onclick="goTo('single')">
+        <div class="lcard-icon">📊</div>
+        <div class="lcard-title">EINZELSCHUSS</div>
+        <div class="lcard-sub">Golfboy Werte analysieren</div>
+      </button>
+      <button class="lcard lcard--multi" onclick="goTo('multi')">
+        <div class="lcard-icon">⚔️</div>
+        <div class="lcard-title">VERGLEICH</div>
+        <div class="lcard-sub">Mehrere Schüsse vergleichen</div>
+      </button>
+      <button class="lcard lcard--upload" onclick="goTo('upload')">
+        <div class="lcard-icon">📸</div>
+        <div class="lcard-title">SCREENSHOT</div>
+        <div class="lcard-sub">Golfboy Bild hochladen</div>
+      </button>
+      <button class="lcard lcard--history" onclick="goTo('history')">
+        <div class="lcard-icon">📁</div>
+        <div class="lcard-title">VERLAUF</div>
+        <div class="lcard-sub">Alle gespeicherten Analysen</div>
+      </button>
+    </div>
+
+    <p class="landing-footer">Golf Club Chippingdales &nbsp;·&nbsp; Since 2021</p>
+
+    <div style="display:flex;gap:8px;width:100%;margin-top:-8px;">
+      <button onclick="goTo('impressum')" style="flex:1;background:transparent;border:1px solid #1a1a1a;color:#444;border-radius:8px;padding:8px 6px;font-family:Inter,sans-serif;font-size:0.48rem;font-weight:600;cursor:pointer;letter-spacing:1px;text-transform:uppercase;">📋 Impressum</button>
+      <button onclick="goTo('nutzung')" style="flex:1;background:transparent;border:1px solid #1a1a1a;color:#444;border-radius:8px;padding:8px 6px;font-family:Inter,sans-serif;font-size:0.48rem;font-weight:600;cursor:pointer;letter-spacing:1px;text-transform:uppercase;">⚖️ Nutzung & KI</button>
+    </div>
+    <div style="width:100%;margin-top:6px;">
+      <button onclick="goTo('anleitung')" style="width:100%;background:rgba(212,175,55,0.06);border:1px solid var(--gold);color:var(--gold);border-radius:8px;padding:10px;font-family:Inter,sans-serif;font-size:0.55rem;font-weight:700;cursor:pointer;letter-spacing:2px;text-transform:uppercase;">📖 Golfboy Anleitung & Bedienung</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     SCREEN: IMPRESSUM
+══════════════════════════════════════════ -->
+<div id="screen-impressum" class="screen hidden">
+  <div class="app-header">
+    <div class="header-left">
+      <img src="logo_chipping.png" class="logo-small">
+      <span class="screen-title">IMPRESSUM</span>
+    </div>
+    <div class="header-right">
+      <button class="btn-back" onclick="goTo('landing')">← MENÜ</button>
+    </div>
+  </div>
+  <div class="scroll-body">
+
+    <div class="form-card">
+      <div class="fc-title">Angaben gemäß § 5 TMG</div>
+      <p style="font-size:0.78rem;color:#ccc;line-height:1.7;"><strong style="color:var(--gold);">Betriebssportverein Chippingdales e.V.</strong><br>
+      Stuttgarter Str. 108<br>71332 Waiblingen<br>Deutschland</p>
+    </div>
+
+    <div class="form-card">
+      <div class="fc-title">Vereinsregister</div>
+      <p style="font-size:0.78rem;color:#ccc;line-height:1.7;">
+        Registernummer: <strong style="color:#fff;">VR 725372</strong><br>
+        Registergericht: <strong style="color:#fff;">Amtsgericht Stuttgart</strong><br>
+        Eingetragen am: 28.12.2021
+      </p>
+    </div>
+
+    <div class="form-card">
+      <div class="fc-title">Vorstand & Ansprechpartner</div>
+      <p style="font-size:0.78rem;color:#ccc;line-height:1.7;">
+        1. Vorsitzender: <strong style="color:#fff;">Jean Michel Prothmann</strong><br>
+        2. Vorsitzender: <strong style="color:#fff;">Thomas Roß</strong><br><br>
+        E-Mail: <a href="mailto:info@chippingdales.de" style="color:var(--gold);">info@chippingdales.de</a>
+      </p>
+    </div>
+
+    <div class="form-card">
+      <div class="fc-title">Haftungsausschluss</div>
+      <p style="font-size:0.78rem;color:#888;line-height:1.7;">Die Inhalte dieser App wurden mit größtmöglicher Sorgfalt erstellt. Der Betriebssportverein Chippingdales e.V. übernimmt jedoch keine Haftung für die Richtigkeit, Vollständigkeit und Aktualität der bereitgestellten Inhalte.</p>
+    </div>
+
+    <div style="height:20px;"></div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     SCREEN: NUTZUNG & KI-HINWEIS
+══════════════════════════════════════════ -->
+<div id="screen-nutzung" class="screen hidden">
+  <div class="app-header">
+    <div class="header-left">
+      <img src="logo_chipping.png" class="logo-small">
+      <span class="screen-title">NUTZUNG & KI</span>
+    </div>
+    <div class="header-right">
+      <button class="btn-back" onclick="goTo('landing')">← MENÜ</button>
+    </div>
+  </div>
+  <div class="scroll-body">
+
+    <div class="form-card" style="border-color:#ab47bc;background:linear-gradient(135deg,#150020,#0f0f0f);">
+      <div class="fc-title" style="color:#ab47bc;">🤖 KI-gestützte App</div>
+      <p style="font-size:0.78rem;color:#ccc;line-height:1.7;">Diese App nutzt <strong style="color:#ab47bc;">Künstliche Intelligenz (GPT-4o von OpenAI)</strong> für alle Analysen und Trainingstipps. Die KI übernimmt die Rolle eines virtuellen Golf-Trainers namens Thomas.</p>
+      <p style="font-size:0.78rem;color:#888;line-height:1.7;margin-top:8px;"><strong style="color:#ff4d4d;">Die KI kann Fehler machen.</strong> Alle Trainingstipps und Analysen sind ohne Gewähr und ersetzen keine professionelle Trainerberatung. Bei Verletzungsrisiken oder medizinischen Fragen bitte immer einen echten Profi aufsuchen.</p>
+    </div>
+
+    <div class="form-card">
+      <div class="fc-title">Nutzungsbedingungen</div>
+      <p style="font-size:0.78rem;color:#ccc;line-height:1.7;">Diese App ist <strong>ausschließlich zur privaten Nutzung</strong> bestimmt — von Golfern für Golfer. Sie richtet sich an die Mitglieder der Chippingdales und deren Freunde.</p>
+      <ul style="font-size:0.75rem;color:#888;line-height:1.8;margin-top:8px;padding-left:16px;">
+        <li>Keine kommerzielle Nutzung</li>
+        <li>Keine Weitergabe oder Veröffentlichung der App-Inhalte</li>
+        <li>Nutzung auf eigene Verantwortung</li>
+        <li>Der OpenAI API Key liegt in deiner Verantwortung</li>
+      </ul>
+    </div>
+
+    <div class="form-card">
+      <div class="fc-title">Datenschutz</div>
+      <p style="font-size:0.78rem;color:#888;line-height:1.7;">Die App speichert ausschließlich deine <strong style="color:#fff;">lokal eingegebenen Analysedaten</strong> im Browser (localStorage). Schussdaten werden zur Analyse an die OpenAI API übertragen — es werden <strong style="color:#fff;">keine personenbezogenen Daten</strong> gespeichert oder weitergegeben.</p>
+    </div>
+
+    <div class="form-card">
+      <div class="fc-title">Kontakt</div>
+      <p style="font-size:0.78rem;color:#ccc;line-height:1.7;">
+        Betriebssportverein Chippingdales e.V.<br>
+        Stuttgarter Str. 108, 71332 Waiblingen<br>
+        E-Mail: <a href="mailto:info@chippingdales.de" style="color:var(--gold);">info@chippingdales.de</a>
+      </p>
+    </div>
+
+    <div style="height:20px;"></div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     SCREEN: ANLEITUNG GOLFBOY
+══════════════════════════════════════════ -->
+<div id="screen-anleitung" class="screen hidden">
+  <div class="app-header">
+    <div class="header-left">
+      <img src="logo_chipping.png" class="logo-small">
+      <span class="screen-title">ANLEITUNG</span>
+    </div>
+    <div class="header-right">
+      <button class="btn-back" onclick="goTo('landing')">← MENÜ</button>
+    </div>
+  </div>
+  <div class="scroll-body">
+
+    <div class="form-card" style="border-color:var(--gold);background:linear-gradient(135deg,#1a1500,#0f0f0f);">
+      <div class="fc-title">⛳ So nutzt du Golf Pro AI</div>
+      <p style="font-size:0.78rem;color:#ccc;line-height:1.7;">Nimm deinen Golfboy Screenshot auf dem Driving Range auf und lass Trainer Thomas deinen Schwung analysieren — in unter 30 Sekunden.</p>
+    </div>
+
+    <div class="form-card">
+      <div class="fc-title">📱 Schritt 1 — Golfboy App</div>
+      <div style="font-size:0.78rem;color:#ccc;line-height:1.8;">
+        <p style="color:var(--gold);font-weight:700;margin-bottom:8px;">Was du brauchst:</p>
+        <ul style="padding-left:16px;color:#888;">
+          <li>iPhone mit <strong style="color:#fff;">Golfboy App</strong> (kostenlos im App Store)</li>
+          <li>Driving Range oder Golfplatz</li>
+          <li>Internetverbindung für die KI-Analyse</li>
+        </ul>
+        <p style="color:var(--gold);font-weight:700;margin:12px 0 8px;">Golfboy einrichten:</p>
+        <ul style="padding-left:16px;color:#888;">
+          <li>Golfboy App öffnen → <strong style="color:#fff;">Kamera-Modus</strong> wählen</li>
+          <li>iPhone hinter dir auf einem Stativ oder Boden aufstellen (Seitenansicht)</li>
+          <li>Abstand: ca. 2-3 Meter, auf Hüfthöhe</li>
+          <li>Schläger und Ball müssen im Bild sein</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="fc-title">🎯 Schritt 2 — Messwerte verstehen</div>
+      <div style="font-size:0.75rem;color:#888;line-height:1.9;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">
+          <div style="background:#0a0a0a;border:1px solid #1a1a1a;border-radius:7px;padding:8px 10px;">
+            <div style="color:var(--gold);font-weight:700;font-size:0.68rem;margin-bottom:2px;">TOTAL</div>
+            <div>Gesamtweite des Balles in Metern (Carry + Roll)</div>
+          </div>
+          <div style="background:#0a0a0a;border:1px solid #1a1a1a;border-radius:7px;padding:8px 10px;">
+            <div style="color:var(--gold);font-weight:700;font-size:0.68rem;margin-bottom:2px;">CARRY</div>
+            <div>Weite bis zum Aufprall — ohne Roll</div>
+          </div>
+          <div style="background:#0a0a0a;border:1px solid #1a1a1a;border-radius:7px;padding:8px 10px;">
+            <div style="color:var(--gold);font-weight:700;font-size:0.68rem;margin-bottom:2px;">SMASH FACTOR</div>
+            <div>Effizienz des Treffpunkts. Ideal: über 1.45. Unter 1.35 = Off-Center</div>
+          </div>
+          <div style="background:#0a0a0a;border:1px solid #1a1a1a;border-radius:7px;padding:8px 10px;">
+            <div style="color:var(--gold);font-weight:700;font-size:0.68rem;margin-bottom:2px;">BALL SPEED</div>
+            <div>Geschwindigkeit des Balls nach dem Treffer in km/h</div>
+          </div>
+          <div style="background:#0a0a0a;border:1px solid #1a1a1a;border-radius:7px;padding:8px 10px;">
+            <div style="color:var(--gold);font-weight:700;font-size:0.68rem;margin-bottom:2px;">CLUB SPEED</div>
+            <div>Schlägerkopfgeschwindigkeit. Driver: gut ab 160 km/h</div>
+          </div>
+          <div style="background:#0a0a0a;border:1px solid #1a1a1a;border-radius:7px;padding:8px 10px;">
+            <div style="color:var(--gold);font-weight:700;font-size:0.68rem;margin-bottom:2px;">LAUNCH ANGLE</div>
+            <div>Abflugwinkel. Driver ideal: 10–15°. Zu flach = Top/Schaufel</div>
+          </div>
+          <div style="background:#0a0a0a;border:1px solid #1a1a1a;border-radius:7px;padding:8px 10px;grid-column:1/-1;">
+            <div style="color:var(--gold);font-weight:700;font-size:0.68rem;margin-bottom:2px;">DIRECTION (R/L)</div>
+            <div>Abflugrichtung. R = rechts, L = links. Unter 5° = sehr gut. Über 8° = Ausrichtungsproblem</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="fc-title">📸 Schritt 3 — Screenshot analysieren</div>
+      <div style="font-size:0.78rem;color:#888;line-height:1.8;">
+        <ul style="padding-left:16px;">
+          <li>Nach dem Schuss zeigt Golfboy die Werte an</li>
+          <li><strong style="color:#fff;">Screenshot machen</strong> (Home + Power Taste)</li>
+          <li>In Golf Pro AI: <strong style="color:var(--gold);">📸 Screenshot</strong> tippen</li>
+          <li>Bild hochladen — KI liest alle Werte automatisch aus</li>
+          <li>Optional: <strong style="color:#fff;">Schläger auswählen</strong> falls falsch erkannt</li>
+          <li>Optional: <strong style="color:#fff;">💬 Bemerkung</strong> eingeben (z.B. "hatte einen Slice")</li>
+          <li><strong style="color:var(--gold);">🎯 KI-Analyse starten</strong> → Trainer Thomas analysiert</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="fc-title">📊 Schritt 4 — Werte manuell eingeben</div>
+      <div style="font-size:0.78rem;color:#888;line-height:1.8;">
+        <ul style="padding-left:16px;">
+          <li>Auf <strong style="color:var(--gold);">📊 Einzelschuss</strong> tippen</li>
+          <li>Alle Werte aus der Golfboy App abtippen</li>
+          <li>Schläger auswählen</li>
+          <li>Bemerkung optional hinzufügen</li>
+          <li>Analyse starten</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="fc-title">⚔️ Schritt 5 — Fortschritt vergleichen</div>
+      <div style="font-size:0.78rem;color:#888;line-height:1.8;">
+        <ul style="padding-left:16px;">
+          <li>Auf <strong style="color:#ff4d4d;">⚔️ Vergleich</strong> tippen</li>
+          <li>Alten Schuss aus <strong style="color:#fff;">📁 Verlauf laden</strong></li>
+          <li>Neuen Schuss manuell eintragen</li>
+          <li><strong style="color:#fff;">Immer denselben Schläger vergleichen!</strong></li>
+          <li>Thomas erklärt ob du Fortschritt gemacht hast</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="form-card" style="border-color:#2ecc71;background:linear-gradient(135deg,#001a0d,#0f0f0f);">
+      <div class="fc-title" style="color:#2ecc71;">💡 Profi-Tipps</div>
+      <div style="font-size:0.75rem;color:#888;line-height:1.8;">
+        <ul style="padding-left:16px;">
+          <li>Immer <strong style="color:#fff;">3-5 Schüsse</strong> messen — Durchschnitt ist aussagekräftiger</li>
+          <li>Gleiche Bedingungen: selber Schläger, selbe Position</li>
+          <li><strong style="color:#fff;">🔊 Vorlesen</strong> nutzen — Trainer Thomas erklärt dir alles während du spielst</li>
+          <li>Wöchentlich messen um <strong style="color:#fff;">Fortschritt zu sehen</strong></li>
+          <li>Bemerkungen eingeben — Thomas geht gezielt auf Slice/Hook/Draw ein</li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="height:20px;"></div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     SCREEN: EINZELSCHUSS
+══════════════════════════════════════════ -->
+<div id="screen-single" class="screen hidden">
+  <div class="app-header">
+    <div class="header-left">
+      <img src="logo_chipping.png" class="logo-small">
+      <span class="screen-title">EINZELSCHUSS</span>
+    </div>
+    <div class="header-right">
+      <button class="btn-back" onclick="goTo('landing')">← MENÜ</button>
+    </div>
+  </div>
+
+  <div class="scroll-body" id="single-body">
+
+    <div class="form-card">
+      <div class="fc-title">Golfboy Werte</div>
+      <div class="field" style="margin-bottom:10px">
+        <label>Schläger</label>
+        <select id="s-club">
+          <option>Driver</option><option>3er Holz</option><option>5er Holz</option>
+          <option>3er Hybrid</option><option>4er Eisen</option><option>5er Eisen</option>
+          <option>6er Eisen</option><option>7er Eisen</option><option>8er Eisen</option>
+          <option>9er Eisen</option><option>Pitching Wedge</option><option>Gap Wedge</option>
+          <option>Sand Wedge</option><option>Lob Wedge</option>
+        </select>
+      </div>
+      <div class="field-row4">
+        <div class="field"><label>Total m</label><input type="number" id="s-total" placeholder="200"></div>
+        <div class="field"><label>Carry m</label><input type="number" id="s-carry" placeholder="182"></div>
+        <div class="field"><label>Höhe m</label><input type="number" id="s-height" placeholder="25"></div>
+        <div class="field"><label>Smash</label><input type="number" id="s-smash" placeholder="1.34" step="0.01"></div>
+      </div>
+      <div class="field-row4">
+        <div class="field"><label>Launch °</label><input type="number" id="s-launch" placeholder="13.2" step="0.1"></div>
+        <div class="field"><label>Direction</label><input type="text" id="s-direction" placeholder="R6.2"></div>
+        <div class="field"><label>Ball km/h</label><input type="number" id="s-ballspeed" placeholder="215"></div>
+        <div class="field"><label>Club km/h</label><input type="number" id="s-clubspeed" placeholder="161"></div>
+      </div>
+      <div class="alert alert-err" id="s-err"></div>
+      <div class="field" style="margin-top:12px">
+        <label>💬 Deine Bemerkung an den Trainer (optional)</label>
+        <textarea id="s-note" placeholder="z.B. Ball hatte einen Slice nach rechts · Schwung hat sich zu schnell angefühlt · hatte einen Hook · Fade war gewollt · Kontakt war dünn..." style="background:#0a0a0a;border:1px solid #2a2a2a;border-radius:7px;color:#fff;padding:9px 10px;font-family:Inter,sans-serif;font-size:0.78rem;width:100%;min-height:60px;resize:vertical;transition:border-color .2s;line-height:1.5;" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='#2a2a2a'"></textarea>
+      </div>
+      <button class="btn-gold" onclick="analyzeSingle()">🎯 KI-ANALYSE STARTEN</button>
+    </div>
+
+    <div class="loading-wrap" id="s-loading">
+      <div class="spinner"></div>
+      <div class="loading-txt" id="s-loadtxt">Schwung wird analysiert…</div>
+    </div>
+    <div id="s-results"></div>
+    <div style="height:20px"></div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     SCREEN: VERGLEICH
+══════════════════════════════════════════ -->
+<div id="screen-multi" class="screen hidden">
+  <div class="app-header">
+    <div class="header-left">
+      <img src="logo_chipping.png" class="logo-small">
+      <span class="screen-title">VERGLEICH</span>
+    </div>
+    <div class="header-right">
+      <button class="btn-back" onclick="goTo('landing')">← MENÜ</button>
+    </div>
+  </div>
+
+  <div class="scroll-body">
+    <div class="form-card">
+      <div class="fc-title">Schüsse vergleichen</div>
+
+      <!-- Aus Verlauf laden -->
+      <div style="background:#080808;border:1px solid #1a1a1a;border-radius:8px;padding:11px 13px;margin-bottom:14px;">
+        <div style="font-size:0.58rem;color:#555;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;font-weight:600;">📁 Aus Verlauf laden</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <select id="hist-select" style="flex:1;min-width:160px;background:var(--bg);border:1px solid #2a2a2a;border-radius:7px;color:var(--text);padding:8px 10px;font-family:Inter,sans-serif;font-size:0.75rem;">
+            <option value="">— Gespeicherten Schuss wählen —</option>
+          </select>
+          <button class="btn-ghost-sm" onclick="loadHistIntoSlot()" style="white-space:nowrap">+ In Vergleich laden</button>
+        </div>
+        <div style="font-size:0.55rem;color:#444;margin-top:6px;">Nur Schüsse mit gleichem Schläger sind sinnvoll vergleichbar.</div>
+      </div>
+
+      <div id="multi-slots"></div>
+      <button class="btn-add-slot" id="btn-add-slot" onclick="addSlot()">+ Schuss manuell hinzufügen (max. 4)</button>
+      <div class="alert alert-err" id="m-err"></div>
+      <div class="alert" id="m-club-warn" style="background:rgba(255,167,38,.08);border:1px solid rgba(255,167,38,.3);color:#ffa726;display:none;margin-top:10px;">
+        ⚠️ Achtung: Du vergleichst verschiedene Schläger. Am besten immer denselben Schläger vergleichen für aussagekräftige Ergebnisse.
+      </div>
+      <div class="field" style="margin-top:12px">
+        <label>💬 Deine Bemerkung an den Trainer (optional)</label>
+        <textarea id="m-note" placeholder="z.B. Schuss 1 hatte einen Slice · Schuss 2 hat sich viel besser angefühlt · ich merke eine Tendenz nach links..." style="background:#0a0a0a;border:1px solid #2a2a2a;border-radius:7px;color:#fff;padding:9px 10px;font-family:Inter,sans-serif;font-size:0.78rem;width:100%;min-height:60px;resize:vertical;transition:border-color .2s;line-height:1.5;" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='#2a2a2a'"></textarea>
+      </div>
+      <button class="btn-gold" onclick="analyzeMulti()">⚔️ VERGLEICH STARTEN</button>
+    </div>
+
+    <div class="loading-wrap" id="m-loading">
+      <div class="spinner"></div>
+      <div class="loading-txt" id="m-loadtxt">Schüsse werden verglichen…</div>
+    </div>
+    <div id="m-results"></div>
+    <div style="height:20px"></div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     SCREEN: SCREENSHOT UPLOAD
+══════════════════════════════════════════ -->
+<div id="screen-upload" class="screen hidden">
+  <div class="app-header">
+    <div class="header-left">
+      <img src="logo_chipping.png" class="logo-small">
+      <span class="screen-title">SCREENSHOT</span>
+    </div>
+    <div class="header-right">
+      <button class="btn-back" onclick="goTo('landing')">← MENÜ</button>
+    </div>
+  </div>
+
+  <div class="scroll-body">
+    <div class="form-card">
+      <div class="fc-title">Golfboy Screenshot</div>
+
+      <div class="field" style="margin-bottom:12px">
+        <label>Schläger (falls nicht erkannt oder korrigieren)</label>
+        <select id="u-club">
+          <option value="">— KI erkennt automatisch —</option>
+          <option>Driver</option><option>3er Holz</option><option>5er Holz</option>
+          <option>3er Hybrid</option><option>4er Eisen</option><option>5er Eisen</option>
+          <option>6er Eisen</option><option>7er Eisen</option><option>8er Eisen</option>
+          <option>9er Eisen</option><option>Pitching Wedge</option><option>Gap Wedge</option>
+          <option>Sand Wedge</option><option>Lob Wedge</option>
+        </select>
+      </div>
+
+      <label for="u-img">
+        <div class="upload-zone" id="u-zone">
+          <div class="uz-icon">📸</div>
+          <div class="uz-title">Screenshot hochladen</div>
+          <div class="uz-sub">JPG oder PNG · Tippen oder Drag & Drop</div>
+        </div>
+      </label>
+      <input type="file" id="u-img" accept="image/*">
+      <div class="upload-preview" id="u-preview">
+        <strong>Erkannte Werte</strong>
+        <span id="u-preview-text"></span>
+      </div>
+      <div class="alert alert-err" id="u-err"></div>
+      <div class="field" style="margin-top:12px">
+        <label>💬 Deine Bemerkung an den Trainer (optional)</label>
+        <textarea id="u-note" placeholder="z.B. Ball hatte einen Slice · Schwung hat sich zu fest angefühlt · ich wollte einen Draw spielen aber es wurde ein Fade..." style="background:#0a0a0a;border:1px solid #2a2a2a;border-radius:7px;color:#fff;padding:9px 10px;font-family:Inter,sans-serif;font-size:0.78rem;width:100%;min-height:60px;resize:vertical;transition:border-color .2s;line-height:1.5;" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='#2a2a2a'"></textarea>
+      </div>
+      <button class="btn-gold" id="u-btn" onclick="analyzeUpload()" disabled>🎯 KI-ANALYSE STARTEN</button>
+    </div>
+
+    <div class="loading-wrap" id="u-loading">
+      <div class="spinner"></div>
+      <div class="loading-txt" id="u-loadtxt">Screenshot wird analysiert…</div>
+    </div>
+    <div id="u-results"></div>
+    <div style="height:20px"></div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     SCREEN: VERLAUF
+══════════════════════════════════════════ -->
+<div id="screen-history" class="screen hidden">
+  <div class="app-header">
+    <div class="header-left">
+      <img src="logo_chipping.png" class="logo-small">
+      <span class="screen-title">VERLAUF</span>
+    </div>
+    <div class="header-right">
+      <button class="btn-back" onclick="goTo('landing')">← MENÜ</button>
+    </div>
+  </div>
+
+  <div class="scroll-body">
+    <div id="history-list"></div>
+    <div style="height:20px"></div>
+  </div>
+</div>
+
+
+<script>
+var API_KEY = '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';
+var LOAD_MSGS = ['Schwung wird analysiert…','Smash Factor bewertet…','Trainingsplan erstellt…','KI denkt nach…'];
+
+// ── NAV ──────────────────────────────────────────────────────────────
+function goTo(screen) {
+  ['landing','single','multi','upload','history','impressum','nutzung','anleitung'].forEach(function(s) {
+    document.getElementById('screen-' + s).classList.add('hidden');
+  });
+  document.getElementById('screen-' + screen).classList.remove('hidden');
+  if (screen === 'history') { renderHistory(); populateHistSelect(); }
+  if (screen === 'multi') {
+    if (!slotsInited) { initSlots(); slotsInited = true; }
+    populateHistSelect();
+  }
+}
+
+// ── KEY CHECK ────────────────────────────────────────────────────────
+function checkKey() {
+  if (!API_KEY || API_KEY.indexOf('HIER-EINTRAGEN') !== -1 || API_KEY.length < 20) {
+    alert('⚠️ Kein API Key eingetragen!\n\nBitte öffne index.html in VS Code,\nsuche "OPENAI-KEY-HIER-EINTRAGEN"\nund trage deinen OpenAI Key ein.\nDann Strg+S speichern und Seite neu laden.');
+    return false;
+  }
+  return true;
+}
+
+// ── MULTI SLOTS ──────────────────────────────────────────────────────
+var slots = [];
+var slotCount = 0;
+var slotsInited = false;
+var CLUBS = ['Driver','3er Holz','5er Holz','3er Hybrid','4er Eisen','5er Eisen','6er Eisen','7er Eisen','8er Eisen','9er Eisen','Pitching Wedge','Gap Wedge','Sand Wedge','Lob Wedge'];
+
+function initSlots() { addSlot(); addSlot(); }
+
+function addSlot() {
+  if (slots.length >= 4) return;
+  slotCount++;
+  var id = slotCount;
+  slots.push(id);
+  var opts = CLUBS.map(function(c) { return '<option>' + c + '</option>'; }).join('');
+  var div = document.createElement('div');
+  div.className = 'shot-slot';
+  div.id = 'slot-' + id;
+  div.innerHTML =
+    '<div class="slot-hd"><span class="slot-label">Schuss ' + slots.length + '</span>'
+    + (slots.length > 2 ? '<button class="btn-red-sm" onclick="removeSlot(' + id + ')">Entfernen</button>' : '')
+    + '</div>'
+    + '<div class="field" style="margin-bottom:9px"><label>Schläger</label><select id="m' + id + '-club">' + opts + '</select></div>'
+    + '<div class="field-row4" style="margin-bottom:8px">'
+    + '<div class="field"><label>Total m</label><input type="number" id="m' + id + '-total" placeholder="200"></div>'
+    + '<div class="field"><label>Carry m</label><input type="number" id="m' + id + '-carry" placeholder="182"></div>'
+    + '<div class="field"><label>Smash</label><input type="number" id="m' + id + '-smash" placeholder="1.34" step="0.01"></div>'
+    + '<div class="field"><label>Launch °</label><input type="number" id="m' + id + '-launch" placeholder="13.2" step="0.1"></div>'
+    + '</div>'
+    + '<div class="field-row4">'
+    + '<div class="field"><label>Direction</label><input type="text" id="m' + id + '-direction" placeholder="R6.2"></div>'
+    + '<div class="field"><label>Ball km/h</label><input type="number" id="m' + id + '-ballspeed" placeholder="215"></div>'
+    + '<div class="field"><label>Club km/h</label><input type="number" id="m' + id + '-clubspeed" placeholder="161"></div>'
+    + '<div class="field"><label>Höhe m</label><input type="number" id="m' + id + '-height" placeholder="25"></div>'
+    + '</div>';
+  document.getElementById('multi-slots').appendChild(div);
+  if (slots.length >= 4) document.getElementById('btn-add-slot').style.display = 'none';
+}
+
+function removeSlot(id) {
+  var el = document.getElementById('slot-' + id);
+  if (el) el.remove();
+  slots = slots.filter(function(s) { return s !== id; });
+  document.getElementById('btn-add-slot').style.display = 'block';
+  slots.forEach(function(sid, i) {
+    var lbl = document.querySelector('#slot-' + sid + ' .slot-label');
+    if (lbl) lbl.textContent = 'Schuss ' + (i + 1);
+  });
+}
+
+function getSlotData(id) {
+  return {
+    club: document.getElementById('m' + id + '-club').value,
+    total: parseFloat(document.getElementById('m' + id + '-total').value) || null,
+    carry: parseFloat(document.getElementById('m' + id + '-carry').value) || null,
+    height: parseFloat(document.getElementById('m' + id + '-height').value) || null,
+    smash: parseFloat(document.getElementById('m' + id + '-smash').value) || null,
+    launch: parseFloat(document.getElementById('m' + id + '-launch').value) || null,
+    direction: document.getElementById('m' + id + '-direction').value || null,
+    ballspeed: parseFloat(document.getElementById('m' + id + '-ballspeed').value) || null,
+    clubspeed: parseFloat(document.getElementById('m' + id + '-clubspeed').value) || null
+  };
+}
+
+// ── UPLOAD ───────────────────────────────────────────────────────────
+var uploadedBase64 = null;
+var uploadedParsed = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+  var imgInput = document.getElementById('u-img');
+  if (imgInput) {
+    imgInput.addEventListener('change', function(e) {
+      var f = e.target.files[0];
+      if (f) processFile(f);
+    });
+  }
+  var zone = document.getElementById('u-zone');
+  if (zone) {
+    zone.addEventListener('dragover', function(e) { e.preventDefault(); zone.classList.add('drag'); });
+    zone.addEventListener('dragleave', function() { zone.classList.remove('drag'); });
+    zone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      zone.classList.remove('drag');
+      var f = e.dataTransfer.files[0];
+      if (f) processFile(f);
+    });
+  }
+});
+
+function processFile(file) {
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    uploadedBase64 = e.target.result.split(',')[1];
+    var zone = document.getElementById('u-zone');
+    zone.innerHTML = '<div class="uz-icon">✅</div><div class="uz-title">Bild geladen</div><div class="uz-sub">' + file.name + '</div>';
+    extractFromImage();
+  };
+  reader.readAsDataURL(file);
+}
+
+async function extractFromImage() {
+  try {
+    var res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + API_KEY },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        max_tokens: 600,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + uploadedBase64 } },
+            { type: 'text', text: 'Du bist ein Experte für Golfboy App Screenshots. WICHTIG: Die Golfboy App zeigt den Schwung als Stroboskop-Aufnahme — das bedeutet du siehst EINEN einzigen Schläger dessen Bewegung in mehreren aufeinanderfolgenden Positionen eingefroren wurde. Es sind NICHT mehrere Schläger — es ist die Schwungbahn eines einzigen Schlägerkopfes der sich von hinten nach vorne bewegt. Lies alle sichtbaren Messwerte aus dem Screenshot aus. Antworte NUR mit JSON ohne Markdown: {"club":"Driver","total":200,"carry":182,"height":25,"smash":1.34,"launch":13.2,"direction":"R6.2","ballspeed":215,"clubspeed":161,"visual":"Beschreibe was du in der Stroboskop-Aufnahme erkennst: Schwungbahn des Schlägerkopfes, Ballposition, Treffpunkt, ob die Bewegungslinie flach oder steil ist"} — fehlende Werte als null.' }
+          ]
+        }]
+      })
+    });
+    var data = await res.json();
+    var text = ((data.choices || [])[0] || {}).message && data.choices[0].message.content || '';
+    var jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      uploadedParsed = JSON.parse(jsonMatch[0]);
+      var p = uploadedParsed;
+      var prev = document.getElementById('u-preview');
+      prev.style.display = 'block';
+      document.getElementById('u-preview-text').textContent =
+        [p.club,
+         p.total     ? 'Total: '  + p.total     + 'm'     : '',
+         p.carry     ? 'Carry: '  + p.carry     + 'm'     : '',
+         p.smash     ? 'Smash: '  + p.smash                : '',
+         p.ballspeed ? 'Ball: '   + p.ballspeed + ' km/h'  : '',
+         p.launch    ? 'Launch: ' + p.launch    + '°'      : '',
+         p.visual    ? '📷 '      + p.visual               : ''
+        ].filter(Boolean).join(' · ');
+    }
+  } catch (e) { /* silent — user can still analyze */ }
+  document.getElementById('u-btn').disabled = false;
+}
+
+// ── API CALL ─────────────────────────────────────────────────────────
+async function callAPI(prompt, imgBase64) {
+  var systemMsg = {
+    role: 'system',
+    content: 'Du bist Thomas, ein erfahrener Golf-Trainer. Du sprichst deinen Schüler immer direkt an (Du-Form), warmherzig, wertschätzend und in normaler verständlicher Sprache. Antworte IMMER und AUSSCHLIESSLICH mit validem JSON. Niemals Text außerhalb des JSON.'
+  };
+  var userContent;
+  if (imgBase64) {
+    userContent = [
+      { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + imgBase64 } },
+      { type: 'text', text: prompt }
+    ];
+  } else {
+    userContent = prompt;
+  }
+  var res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + API_KEY },
+    body: JSON.stringify({
+      model: 'gpt-4o',
+      max_tokens: 4500,
+      response_format: { type: 'json_object' },
+      messages: [systemMsg, { role: 'user', content: userContent }]
+    })
+  });
+  var data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  var text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content || '';
+  var jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error('Keine gültige Antwort – bitte nochmal versuchen.');
+  return JSON.parse(jsonMatch[0]);
+}
+
+// ── PROMPTS ──────────────────────────────────────────────────────────
+function buildSinglePrompt(shot) {
+  var hasVisual = shot && shot.visual;
+  var hasNote = shot && shot.note;
+  return 'Du bist Thomas, ein erfahrener Golf-Trainer mit 20 Jahren Erfahrung.'
+    + ' Du sprichst deinen Schüler direkt an — warmherzig, wertschätzend, in normaler Sprache, immer per Du.'
+    + ' Du siehst immer zuerst das Positive, dann was verbessert werden kann.'
+    + (hasVisual ? ' Du hast gerade den Golfboy Screenshot angeschaut. WICHTIG: Die Golfboy App zeigt den Schwung als Stroboskop-Aufnahme — du siehst EINEN einzigen Schläger dessen Bewegung in mehreren Positionen eingefroren wurde. Das zeigt die komplette Schwungbahn. Du siehst: ' + shot.visual + '.' : '')
+    + (hasNote ? '\n\n⭐ WICHTIG — Dein Schüler schreibt dir persönlich: "' + shot.note + '" — Gehe auf diese Bemerkung konkret ein! Erkläre was biomechanisch dazu führt (z.B. bei Slice: offene Schlägerface, Outside-In Schwungpfad) und wie man es behebt.' : '')
+    + '\n\nGolfboy Launch Monitor Daten: ' + JSON.stringify(shot)
+    + '\n\nDeine Referenzwerte:'
+    + '\n- Smash Factor: unter 1.30 = Fehltreffer, 1.30-1.38 = Off-Center, 1.38-1.44 = guter Kontakt, 1.44-1.48 = sehr gut, über 1.48 = perfekt'
+    + '\n- Launch Angle Driver: unter 8° = zu flach (Top/Schaufel), 10-15° = ideal, über 17° = zu viel Backspin'
+    + '\n- Ball Speed: 180-210 = Hobbygolfer, 210-240 = fortgeschritten, über 240 = sehr gut'
+    + '\n- Club Speed: 140-160 = normal, 160-180 = gut, über 180 = sehr schnell'
+    + '\n- Direction: unter 3° = sehr geradeaus, 3-5° = leichte Tendenz, über 5° = Ausrichtungsproblem'
+    + '\n\nSchreibe einen detaillierten Trainer-Bericht von mindestens 1000 Zeichen.'
+    + ' Erkläre alles in normaler Sprache mit einfachen Analogien.'
+    + ' Beginne immer mit einem echten Lob. Sei konkret, warm und motivierend.'
+    + (hasVisual ? ' Erkläre auch was du im Bild siehst — Schlägerposition, Körperhaltung, Treffmoment.' : '')
+    + '\n\nAntworte mit JSON:'
+    + ' {"score":72,"level":"Fortgeschrittener Hobbygolfer",'
+    + '"summary":"Mindestens 5 Sätze direkt an den Schüler (Du-Form): Beginne mit einem echten Lob für etwas Positives. Dann Gesamtbild, wichtigste Stärke, größtes Verbesserungspotenzial, was möglich ist wenn es besser wird.",'
+    + (hasVisual ? '"visual_feedback":"Mindestens 4 Sätze in Du-Form: Erkläre dem Schüler was die Stroboskop-Aufnahme zeigt — die Bewegungslinie des Schlägerkopfes von Backswing bis Follow-through. Beschreibe ob die Schwungbahn flach oder steil ist, wie der Schläger den Ball trifft (von innen, von außen, gerade), wie der Ballflug aussieht. Sei konkret und erkläre was gut aussieht und was du ändern würdest.",' : '')
+    + '"metrics":['
+    + '{"name":"Smash Factor","value":"1.34","rating":"good|ok|bad","pct":65,"note":"Satz was dieser Wert konkret bedeutet"},'
+    + '{"name":"Launch Angle","value":"13.2°","rating":"good|ok|bad","pct":82,"note":"Satz in normaler Sprache"},'
+    + '{"name":"Ball Speed","value":"215 km/h","rating":"good|ok|bad","pct":75,"note":"Einordnung im Vergleich zu anderen Golfern"},'
+    + '{"name":"Direction","value":"R6.2°","rating":"good|ok|bad","pct":52,"note":"Was bedeutet das auf dem Platz"}],'
+    + '"tips":['
+    + '{"icon":"🎯","title":"DAS WICHTIGSTE ZUERST",'
+    + '"body":"Mindestens 5 Sätze in Du-Form: Was ist das Problem, erkläre es mit einer einfachen Analogie, warum passiert es, was ist die Konsequenz auf dem Platz, wie fühlt sich die Verbesserung an wenn du es umsetzt.",'
+    + '"drill":"Übungsname: Schritt-für-Schritt in einfacher Sprache. Stelle dich so auf... Halte so... Mach folgendes... Wiederhole 15x. Du erkennst Fortschritt wenn..."},'
+    + '{"icon":"💪","title":"ZWEITER WICHTIGER PUNKT",'
+    + '"body":"Mindestens 5 Sätze warm und motivierend in Du-Form","drill":"Übungsname mit vollständiger einfacher Anleitung und Wiederholungen"},'
+    + '{"icon":"🔄","title":"DRITTER PUNKT",'
+    + '"body":"Mindestens 4 Sätze in Du-Form","drill":"Übung mit Anleitung und Wiederholungen"},'
+    + '{"icon":"⚡","title":"DAS MACHST DU SCHON GUT",'
+    + '"body":"Mindestens 4 Sätze — echtes Lob für eine wirkliche Stärke, wie du sie noch weiter ausbauen kannst","drill":"Übung zum Ausbauen der Stärke"}],'
+    + '"plan":['
+    + '{"week":"WOCHE 1","focus":"Fokusthema",'
+    + '"days":[{"day":"Mo","task":"Genaue Aufgabe mit Schläger, Wiederholungen und Fokus","dur":"40 Min"},{"day":"Mi","task":"Genaue Aufgabe","dur":"45 Min"},{"day":"Fr","task":"Genaue Aufgabe","dur":"30 Min"},{"day":"Sa","task":"9 Loch oder Range mit konkretem Fokusthema","dur":"90 Min"}]},'
+    + '{"week":"WOCHE 2","focus":"Fokusthema",'
+    + '"days":[{"day":"Mo","task":"Aufgabe","dur":"40 Min"},{"day":"Mi","task":"Aufgabe","dur":"45 Min"},{"day":"Fr","task":"Aufgabe","dur":"30 Min"},{"day":"Sa","task":"Runde mit Fokus","dur":"90 Min"}]},'
+    + '{"week":"WOCHE 3","focus":"Fokusthema",'
+    + '"days":[{"day":"Mo","task":"Aufgabe","dur":"40 Min"},{"day":"Mi","task":"Aufgabe","dur":"45 Min"},{"day":"Fr","task":"Aufgabe","dur":"30 Min"},{"day":"Sa","task":"Runde mit Fokus","dur":"90 Min"}]},'
+    + '{"week":"WOCHE 4","focus":"Messen und Feiern",'
+    + '"days":[{"day":"Mo","task":"Neue Golfboy Session: Miss dich neu und vergleiche mit deinen Startwerten — du wirst die Verbesserung sehen!","dur":"40 Min"},{"day":"Mi","task":"Aufgabe","dur":"45 Min"},{"day":"Fr","task":"Freie Session — genieße es ohne Druck","dur":"30 Min"},{"day":"Sa","task":"18 Loch: Notiere Fairways und Distanzen — du wirst den Unterschied merken!","dur":"4 Std"}]}]}'
+    + ' Alles auf Deutsch. Mindestens 1000 Zeichen Gesamtinhalt. Warm, ehrlich, motivierend, in Du-Form.';
+}
+
+function buildMultiPrompt(shots, note) {
+  var hasNote = note && note.length > 0;
+  return 'Du bist Thomas, ein erfahrener Golf-Trainer mit 20 Jahren Erfahrung.'
+    + ' Du sprichst deinen Schüler direkt an — warmherzig, wertschätzend, in normaler Sprache, immer per Du.'
+    + ' Dein Schüler hat ' + shots.length + ' Schüsse aufgezeichnet: ' + JSON.stringify(shots)
+    + (hasNote ? '\n\n⭐ WICHTIG — Dein Schüler schreibt dir persönlich: "' + note + '" — Gehe auf diese Bemerkung konkret ein und beziehe sie in den Vergleich ein!' : '')
+    + '\n\nErkläre welcher Schuss am besten war und warum, was die Unterschiede bedeuten,'
+    + ' was das über die Konsistenz aussagt, und was der Schüler mitnehmen soll.'
+    + ' Mindestens 800 Zeichen Gesamtinhalt.'
+    + '\n\nJSON:'
+    + ' {"best":0,"summary":"Mindestens 5 Sätze in Du-Form: Lob zuerst, dann welcher Schuss am besten war und warum, was die Unterschiede bedeuten, was das über deinen Schwung aussagt",'
+    + '"comparison":[{"label":"Schuss 1","score":72,"smash":"1.34","launch":"13.2°","ballspeed":"215 km/h","total":"200m","direction":"R6.2°","note":"Ehrliche Einschätzung in normaler Sprache"}],'
+    + '"tips":['
+    + '{"icon":"🎯","title":"DAS ZEIGT DER VERGLEICH",'
+    + '"body":"Mindestens 5 Sätze: Was zeigt der Vergleich, wo bist du konsistent, wo variiert es noch und warum?","drill":"Konkrete Übung in einfacher Sprache mit Schritten und Wiederholungen"},'
+    + '{"icon":"💪","title":"ZWEITER WICHTIGER PUNKT","body":"Mindestens 4 Sätze","drill":"Übung mit Anleitung"},'
+    + '{"icon":"⚡","title":"SO WIRST DU NOCH KONSISTENTER","body":"Mindestens 4 Sätze — motivierend und konkret","drill":"Übung mit Anleitung"}]}'
+    + ' Alles auf Deutsch. Warm, ehrlich, motivierend.';
+}
+
+// ── LOADERS ──────────────────────────────────────────────────────────
+function startLoad(prefix) {
+  document.getElementById(prefix + '-loading').style.display = 'block';
+  document.getElementById(prefix + '-results').innerHTML = '';
+  var mi = 0;
+  return setInterval(function() {
+    mi = (mi + 1) % LOAD_MSGS.length;
+    document.getElementById(prefix + '-loadtxt').textContent = LOAD_MSGS[mi];
+  }, 1800);
+}
+
+function stopLoad(prefix, interval) {
+  clearInterval(interval);
+  document.getElementById(prefix + '-loading').style.display = 'none';
+}
+
+function showErr(id, msg) {
+  var e = document.getElementById(id);
+  e.textContent = msg;
+  e.style.display = 'block';
+}
+
+function hideErr(id) {
+  document.getElementById(id).style.display = 'none';
+}
+
+// ── ANALYZE SINGLE ───────────────────────────────────────────────────
+async function analyzeSingle() {
+  if (!checkKey()) return;
+  var total = document.getElementById('s-total').value;
+  var bs = document.getElementById('s-ballspeed').value;
+  if (!total && !bs) { showErr('s-err', 'Bitte mindestens Total (m) oder Ball Speed eingeben.'); return; }
+  hideErr('s-err');
+  var shot = {
+    club: document.getElementById('s-club').value,
+    total: parseFloat(total) || null,
+    carry: parseFloat(document.getElementById('s-carry').value) || null,
+    height: parseFloat(document.getElementById('s-height').value) || null,
+    smash: parseFloat(document.getElementById('s-smash').value) || null,
+    launch: parseFloat(document.getElementById('s-launch').value) || null,
+    direction: document.getElementById('s-direction').value || null,
+    ballspeed: parseFloat(bs) || null,
+    clubspeed: parseFloat(document.getElementById('s-clubspeed').value) || null,
+    note: document.getElementById('s-note').value.trim() || null
+  };
+  var interval = startLoad('s');
+  try {
+    var r = await callAPI(buildSinglePrompt(shot), null);
+    stopLoad('s', interval);
+    saveHistory({ type: 'single', shot: shot, result: r, date: new Date().toLocaleString('de-DE') });
+    populateHistSelect();
+    document.getElementById('s-results').innerHTML = renderSingle(r);
+    document.getElementById('s-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (e) {
+    stopLoad('s', interval);
+    showErr('s-err', 'Fehler: ' + e.message);
+  }
+}
+
+// ── ANALYZE MULTI ────────────────────────────────────────────────────
+async function analyzeMulti() {
+  if (!checkKey()) return;
+  if (slots.length < 2) { showErr('m-err', 'Mindestens 2 Schüsse eingeben.'); return; }
+  var shots = slots.map(function(id) { return getSlotData(id); });
+  var multiNote = document.getElementById('m-note').value.trim() || null;
+  if (shots.filter(function(s) { return s.total || s.ballspeed; }).length < 2) {
+    showErr('m-err', 'Mindestens 2 Schüsse mit Werten füllen.'); return;
+  }
+  hideErr('m-err');
+
+  // Schläger-Warnung prüfen
+  var clubs = shots.map(function(s) { return s.club; }).filter(Boolean);
+  var uniqueClubs = clubs.filter(function(c, i) { return clubs.indexOf(c) === i; });
+  var warnEl = document.getElementById('m-club-warn');
+  if (uniqueClubs.length > 1) {
+    warnEl.style.display = 'block';
+  } else {
+    warnEl.style.display = 'none';
+  }
+
+  var interval = startLoad('m');
+  try {
+    var r = await callAPI(buildMultiPrompt(shots, multiNote), null);
+    stopLoad('m', interval);
+    saveHistory({ type: 'multi', shots: shots, result: r, date: new Date().toLocaleString('de-DE') });
+    populateHistSelect();
+    document.getElementById('m-results').innerHTML = renderMulti(r, shots);
+    document.getElementById('m-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (e) {
+    stopLoad('m', interval);
+    showErr('m-err', 'Fehler: ' + e.message);
+  }
+}
+
+// ── VERLAUF DROPDOWN ─────────────────────────────────────────────────
+function populateHistSelect() {
+  var sel = document.getElementById('hist-select');
+  if (!sel) return;
+  var hist = getHist();
+  sel.innerHTML = '<option value="">— Gespeicherten Schuss wählen —</option>';
+  hist.forEach(function(h, i) {
+    if (h.type === 'multi') return; // Nur Einzelschüsse
+    var club = (h.shot && h.shot.club) ? h.shot.club : 'Unbekannt';
+    var total = (h.shot && h.shot.total) ? h.shot.total + 'm' : '';
+    var score = (h.result && h.result.score) ? ' · Score ' + h.result.score : '';
+    var label = club + (total ? ' · ' + total : '') + score + ' · ' + (h.date || '');
+    var opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = label;
+    sel.appendChild(opt);
+  });
+}
+
+function loadHistIntoSlot() {
+  var sel = document.getElementById('hist-select');
+  var idx = sel.value;
+  if (idx === '') { alert('Bitte zuerst einen Schuss aus dem Verlauf wählen.'); return; }
+  if (slots.length >= 4) { alert('Maximal 4 Schüsse im Vergleich.'); return; }
+  var h = getHist()[parseInt(idx)];
+  if (!h || !h.shot) return;
+
+  // Slot hinzufügen
+  addSlot();
+  var id = slots[slots.length - 1];
+
+  // Werte eintragen
+  var s = h.shot;
+  if (s.club) {
+    var clubSel = document.getElementById('m' + id + '-club');
+    for (var i = 0; i < clubSel.options.length; i++) {
+      if (clubSel.options[i].text === s.club) { clubSel.selectedIndex = i; break; }
+    }
+  }
+  if (s.total)     document.getElementById('m' + id + '-total').value     = s.total;
+  if (s.carry)     document.getElementById('m' + id + '-carry').value     = s.carry;
+  if (s.smash)     document.getElementById('m' + id + '-smash').value     = s.smash;
+  if (s.launch)    document.getElementById('m' + id + '-launch').value    = s.launch;
+  if (s.direction) document.getElementById('m' + id + '-direction').value = s.direction;
+  if (s.ballspeed) document.getElementById('m' + id + '-ballspeed').value = s.ballspeed;
+  if (s.clubspeed) document.getElementById('m' + id + '-clubspeed').value = s.clubspeed;
+  if (s.height)    document.getElementById('m' + id + '-height').value    = s.height;
+
+  // Datum als Slot-Label setzen
+  var lbl = document.querySelector('#slot-' + id + ' .slot-label');
+  if (lbl) lbl.textContent = (s.club || 'Schuss') + ' · ' + (h.date || '');
+
+  sel.value = '';
+}
+
+// ── ANALYZE UPLOAD ───────────────────────────────────────────────────
+async function analyzeUpload() {
+  if (!checkKey()) return;
+  if (!uploadedBase64) { showErr('u-err', 'Bitte zuerst Screenshot hochladen.'); return; }
+  hideErr('u-err');
+  var interval = startLoad('u');
+  try {
+    var shot = uploadedParsed || {};
+    // Manuell gewählter Schläger überschreibt KI-Erkennung
+    var manualClub = document.getElementById('u-club').value;
+    if (manualClub) shot.club = manualClub;
+    shot.note = document.getElementById('u-note').value.trim() || null;
+    var r = await callAPI(buildSinglePrompt(shot), uploadedBase64);
+    stopLoad('u', interval);
+    saveHistory({ type: 'upload', shot: shot, result: r, date: new Date().toLocaleString('de-DE') });
+    // Verlauf-Dropdown aktualisieren
+    populateHistSelect();
+    document.getElementById('u-results').innerHTML = renderSingle(r);
+    document.getElementById('u-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (e) {
+    stopLoad('u', interval);
+    showErr('u-err', 'Fehler: ' + e.message);
+  }
+}
+
+// ── TEXT-TO-SPEECH (ElevenLabs via Puter.js — kostenlos, kein extra Key) ──
+var ttsAudio = null;
+var ttsSpeaking = false;
+
+function buildTrainerSpeech(r) {
+  // Puter.js ElevenLabs Limit: 3000 Zeichen
+  // Nur das Wichtigste vorlesen: Begrüßung + Summary + max 2 Tipps
+  var text = 'Hallo! Hier ist dein persönliches Trainer-Feedback von Thomas. ';
+  text += (r.summary || '') + ' ';
+
+  if (r.visual_feedback && text.length < 1500) {
+    var vf = r.visual_feedback.substring(0, 400);
+    text += 'Mein Blick auf deinen Schwung: ' + vf + ' ';
+  }
+
+  if (r.tips && r.tips.length) {
+    text += 'Und jetzt meine wichtigsten Tipps für dich. ';
+    for (var i = 0; i < Math.min(2, r.tips.length); i++) {
+      var t = r.tips[i];
+      var tipText = 'Tipp ' + (i + 1) + ': ' + t.title + '. ';
+      // Body auf 200 Zeichen kürzen
+      var body = (t.body || '').substring(0, 200);
+      tipText += body + ' ';
+      if (text.length + tipText.length < 2700) {
+        text += tipText;
+      }
+    }
+  }
+
+  text += 'Den vollständigen Trainingsplan siehst du auf dem Bildschirm. Viel Spaß beim Training!';
+
+  // Sicherheits-Trim
+  if (text.length > 2950) text = text.substring(0, 2950) + '…';
+  return text;
+}
+
+function buildMultiSpeech(r) {
+  var text = 'Hallo! Hier ist dein Vergleichs-Feedback von Trainer Thomas. ';
+  text += (r.summary || '').substring(0, 500) + ' ';
+  if (r.tips && r.tips.length) {
+    text += 'Mein wichtigster Tipp: ' + r.tips[0].title + '. ';
+    text += (r.tips[0].body || '').substring(0, 300) + ' ';
+  }
+  text += 'Weiter so — du entwickelst dich super!';
+  if (text.length > 2950) text = text.substring(0, 2950) + '…';
+  return text;
+}
+
+function voiceButtonHTML(speechText) {
+  var escaped = speechText.replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+  return '<button class="tts-btn" data-speech="' + escaped + '" onclick="handleVoiceBtn(this)" '
+    + 'style="width:100%;background:transparent;border:1px solid var(--gold);color:var(--gold);'
+    + 'border-radius:10px;padding:12px;font-family:Inter,sans-serif;font-size:0.75rem;'
+    + 'font-weight:700;cursor:pointer;letter-spacing:1px;text-transform:uppercase;'
+    + 'margin-bottom:14px;transition:all .2s;">'
+    + '🔊 Trainer Thomas vorlesen'
+    + '</button>';
+}
+
+async function handleVoiceBtn(btn) {
+  if (ttsSpeaking) {
+    window.speechSynthesis.cancel();
+    ttsSpeaking = false;
+    document.querySelectorAll('.tts-btn').forEach(function(b) {
+      b.textContent = '🔊 Trainer Thomas vorlesen';
+      b.style.background = 'transparent';
+      b.disabled = false;
+    });
+    return;
+  }
+
+  var text = btn.getAttribute('data-speech');
+  if (!text) return;
+
+  if (!window.speechSynthesis) {
+    alert('Dein Browser unterstützt keine Sprachausgabe. Bitte Safari auf iPhone verwenden.');
+    return;
+  }
+
+  // iOS Fix: speechSynthesis muss direkt im Click-Event gestartet werden
+  window.speechSynthesis.cancel();
+
+  var utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'de-DE';
+  utter.rate = 0.88;
+  utter.pitch = 0.95;
+  utter.volume = 1.0;
+
+  // Beste deutsche Stimme suchen
+  var voices = window.speechSynthesis.getVoices();
+  var deVoice = null;
+  // Priorität: männliche deutsche Stimme
+  var preferredNames = ['daniel', 'markus', 'hans', 'stefan', 'thomas', 'male', 'männlich'];
+  for (var p = 0; p < preferredNames.length; p++) {
+    deVoice = voices.find(function(v) {
+      return v.lang && v.lang.startsWith('de') && v.name.toLowerCase().includes(preferredNames[p]);
+    });
+    if (deVoice) break;
+  }
+  // Fallback: irgendeine deutsche Stimme
+  if (!deVoice) {
+    deVoice = voices.find(function(v) { return v.lang && v.lang.startsWith('de'); });
+  }
+  if (deVoice) utter.voice = deVoice;
+
+  ttsSpeaking = true;
+  btn.textContent = '⏹ Stoppen';
+  btn.style.background = 'rgba(212,175,55,0.12)';
+
+  utter.onend = function() {
+    ttsSpeaking = false;
+    btn.textContent = '🔊 Trainer Thomas vorlesen';
+    btn.style.background = 'transparent';
+  };
+  utter.onerror = function() {
+    ttsSpeaking = false;
+    btn.textContent = '🔊 Trainer Thomas vorlesen';
+    btn.style.background = 'transparent';
+  };
+
+  window.speechSynthesis.speak(utter);
+
+  // iOS Watchdog: speechSynthesis stoppt manchmal nach 15 Sek — neu starten
+  var watchdog = setInterval(function() {
+    if (!ttsSpeaking) { clearInterval(watchdog); return; }
+    if (window.speechSynthesis.paused) window.speechSynthesis.resume();
+  }, 5000);
+}
+
+
+function renderSingle(r) {
+  var sc = r.score || 0;
+  var col = sc >= 75 ? 'var(--green)' : sc >= 55 ? '#ffa726' : 'var(--red)';
+  var speechText = buildTrainerSpeech(r);
+
+  var html = '<div class="result-section">'
+    + voiceButtonHTML(speechText)
+    + '<div class="score-card">'
+    + '<div class="score-row">'
+    + '<div class="score-circle" style="border-color:' + col + ';box-shadow:0 0 20px ' + col + '33">'
+    + '<div class="score-num" style="color:' + col + '">' + sc + '</div>'
+    + '<div class="score-lbl">Score</div></div>'
+    + '<div class="score-info"><h2>' + (r.level || '') + '</h2><p>' + (r.summary || '') + '</p></div>'
+    + '</div>'
+    + '<div class="metric-grid">'
+    + (r.metrics || []).map(function(m) {
+        return '<div class="metric-item">'
+          + '<div class="metric-head"><span class="metric-name">' + m.name + '</span>'
+          + '<span class="metric-val c-' + m.rating + '">' + m.value + '</span></div>'
+          + '<div class="mbar"><div class="mfill f-' + m.rating + '" style="width:' + m.pct + '%"></div></div>'
+          + '<div class="metric-note">' + (m.note || '') + '</div></div>';
+      }).join('')
+    + '</div></div>';
+
+  if (r.visual_feedback) {
+    html += '<div class="tip-card" style="border-left-color:#4db6ac;margin-bottom:12px">'
+      + '<div class="tip-head"><span class="tip-icon">📷</span><span class="tip-title" style="color:#4db6ac;">TRAINER BLICK AUF DEN SCHWUNG</span></div>'
+      + '<div class="tip-body">' + r.visual_feedback + '</div>'
+      + '</div>';
+  }
+
+  html += '<div class="sec-label">Trainingstipps</div>'
+    + (r.tips || []).map(function(t) {
+        return '<div class="tip-card">'
+          + '<div class="tip-head"><span class="tip-icon">' + t.icon + '</span><span class="tip-title">' + t.title + '</span></div>'
+          + '<div class="tip-body">' + t.body + '</div>'
+          + (t.drill ? '<div class="tip-drill"><strong>💪 Übung:</strong> ' + t.drill + '</div>' : '')
+          + '</div>';
+      }).join('')
+    + '<div class="sec-label" style="margin-top:14px">4-Wochen Trainingsplan</div>'
+    + (r.plan || []).map(function(w) {
+        return '<div class="plan-week">'
+          + '<div class="week-hd"><span class="week-title">' + w.week + '</span><span class="week-badge">' + w.focus + '</span></div>'
+          + (w.days || []).map(function(d) {
+              return '<div class="day-row"><span class="day-name">' + d.day + '</span>'
+                + '<span class="day-task">' + d.task + '</span>'
+                + '<span class="day-dur">⏱ ' + d.dur + '</span></div>';
+            }).join('')
+          + '</div>';
+      }).join('')
+    + '</div>';
+  return html;
+}
+
+// ── RENDER MULTI ─────────────────────────────────────────────────────
+function renderMulti(r, shots) {
+  var bestIdx = r.best || 0;
+  var speechText = buildMultiSpeech(r);
+
+  var html = '<div class="result-section">'
+    + voiceButtonHTML(speechText)
+    + '<div class="score-card">'
+    + '<div class="sec-label">Vergleich</div>'
+    + '<p style="font-size:0.72rem;color:#888;line-height:1.7;margin-bottom:12px">' + (r.summary || '') + '</p>'
+    + '<p style="font-size:0.68rem;color:var(--gold);margin-bottom:12px">🏆 Bester Schuss: <strong>Schuss ' + (bestIdx + 1) + '</strong></p>'
+    + '<div class="cmp-wrap"><table class="cmp-table"><thead><tr>'
+    + '<th>Schuss</th><th>Score</th><th>Total</th><th>Smash</th><th>Launch</th><th>Ball</th>'
+    + '</tr></thead><tbody>'
+    + (r.comparison || []).map(function(c, i) {
+        var best = i === bestIdx;
+        return '<tr class="' + (best ? 'best-row' : '') + '">'
+          + '<td class="' + (best ? 'best' : '') + '">' + c.label + (best ? ' 🏆' : '') + '</td>'
+          + '<td class="' + (best ? 'best' : '') + '">' + c.score + '</td>'
+          + '<td>' + (c.total || '-') + '</td>'
+          + '<td>' + (c.smash || '-') + '</td>'
+          + '<td>' + (c.launch || '-') + '</td>'
+          + '<td>' + (c.ballspeed || '-') + '</td>'
+          + '</tr>';
+      }).join('')
+    + '</tbody></table></div></div>'
+    + '<div class="sec-label">Trainingstipps</div>'
+    + (r.tips || []).map(function(t) {
+        return '<div class="tip-card">'
+          + '<div class="tip-head"><span class="tip-icon">' + t.icon + '</span><span class="tip-title">' + t.title + '</span></div>'
+          + '<div class="tip-body">' + t.body + '</div>'
+          + (t.drill ? '<div class="tip-drill"><strong>💪 Übung:</strong> ' + t.drill + '</div>' : '')
+          + '</div>';
+      }).join('')
+    + '</div>';
+  return html;
+}
+
+// ── HISTORY ──────────────────────────────────────────────────────────
+function saveHistory(entry) {
+  var hist = getHist();
+  hist.unshift(entry);
+  if (hist.length > 20) hist = hist.slice(0, 20);
+  localStorage.setItem('golfpro_hist_v1', JSON.stringify(hist));
+}
+
+function getHist() {
+  try { return JSON.parse(localStorage.getItem('golfpro_hist_v1') || '[]'); }
+  catch (e) { return []; }
+}
+
+function renderHistory() {
+  var hist = getHist();
+  var el = document.getElementById('history-list');
+  if (!hist.length) {
+    el.innerHTML = '<div class="empty-state">Noch keine Analysen vorhanden.<br>Starte deine erste Analyse!</div>';
+    return;
+  }
+  var html = '<div style="display:flex;justify-content:flex-end;margin-bottom:12px">'
+    + '<button class="btn-red-sm" onclick="clearHistory()">Verlauf löschen</button></div>';
+  html += hist.map(function(h, i) {
+    var sc = (h.result && h.result.score) ? h.result.score : '--';
+    var col = sc >= 75 ? 'var(--green)' : sc >= 55 ? '#ffa726' : sc === '--' ? '#555' : 'var(--red)';
+    var title = h.type === 'multi' ? '⚔️ Vergleich (' + (h.shots || []).length + ' Schüsse)'
+              : h.type === 'upload' ? '📸 Screenshot-Analyse'
+              : '📊 ' + ((h.shot || {}).club || 'Analyse');
+    return '<div class="hist-item" onclick="loadHist(' + i + ')">'
+      + '<div><div class="hist-title">' + title + '</div><div class="hist-meta">' + (h.date || '') + '</div></div>'
+      + '<div class="hist-right">'
+      + '<div class="hist-score" style="color:' + col + '">' + sc + '</div>'
+      + '<button class="btn-red-sm" onclick="event.stopPropagation();delHist(' + i + ')">✕</button>'
+      + '</div></div>';
+  }).join('');
+  el.innerHTML = html;
+}
+
+function loadHist(i) {
+  var h = getHist()[i];
+  if (!h || !h.result) return;
+  if (h.type === 'multi') {
+    goTo('multi');
+    setTimeout(function() { document.getElementById('m-results').innerHTML = renderMulti(h.result, h.shots || []); }, 100);
+  } else {
+    goTo('single');
+    setTimeout(function() { document.getElementById('s-results').innerHTML = renderSingle(h.result); }, 100);
+  }
+}
+
+function delHist(i) {
+  var hist = getHist();
+  hist.splice(i, 1);
+  localStorage.setItem('golfpro_hist_v1', JSON.stringify(hist));
+  renderHistory();
+}
+
+function clearHistory() {
+  if (confirm('Gesamten Verlauf löschen?')) {
+    localStorage.removeItem('golfpro_hist_v1');
+    renderHistory();
+  }
+}
+
+// ── PWA ──────────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('./sw.js')
+      .then(function(r) { console.log('SW:', r.scope); })
+      .catch(function(e) { console.log('SW Fehler:', e); });
+  });
+}
+
+</script>
+</body>
+</html>
