@@ -972,7 +972,7 @@ body {
 
 
 <script>
-var API_KEY = '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';
+var API_KEY = "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"; // sk-ant-api03-...
 var LOAD_MSGS = ['Schwung wird analysiert…','Smash Factor bewertet…','Trainingsplan erstellt…','KI denkt nach…'];
 
 // ── NAV ──────────────────────────────────────────────────────────────
@@ -991,7 +991,7 @@ function goTo(screen) {
 // ── KEY CHECK ────────────────────────────────────────────────────────
 function checkKey() {
   if (!API_KEY || API_KEY.indexOf('HIER-EINTRAGEN') !== -1 || API_KEY.length < 20) {
-    alert('⚠️ Kein API Key eingetragen!\n\nBitte öffne index.html in VS Code,\nsuche "OPENAI-KEY-HIER-EINTRAGEN"\nund trage deinen OpenAI Key ein.\nDann Strg+S speichern und Seite neu laden.');
+    alert('⚠️ Kein API Key eingetragen!\n\nBitte öffne index.html in VS Code,\nsuche "ANTHROPIC-KEY-HIER-EINTRAGEN"\nund trage deinen Anthropic API Key ein.\n(console.anthropic.com → API Keys)\nDann Strg+S speichern und Seite neu laden.');
     return false;
   }
   return true;
@@ -1091,30 +1091,40 @@ function processFile(file) {
     uploadedBase64 = e.target.result.split(',')[1];
     var zone = document.getElementById('u-zone');
     zone.innerHTML = '<div class="uz-icon">✅</div><div class="uz-title">Bild geladen</div><div class="uz-sub">' + file.name + '</div>';
+    // Button sofort aktivieren — Analyse geht auch ohne Wert-Extraktion
+    document.getElementById('u-btn').disabled = false;
+    // Werte im Hintergrund auslesen (optional)
     extractFromImage();
   };
   reader.readAsDataURL(file);
 }
 
 async function extractFromImage() {
+  // Kein Key → still überspringen, User kann trotzdem manuell analysieren
+  if (!API_KEY || API_KEY.indexOf('HIER-EINTRAGEN') !== -1) return;
   try {
-    var res = await fetch('https://api.openai.com/v1/chat/completions', {
+    var res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + API_KEY },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 600,
         messages: [{
           role: 'user',
           content: [
-            { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + uploadedBase64 } },
-            { type: 'text', text: 'Du bist ein Experte für Golfboy App Screenshots. WICHTIG: Die Golfboy App zeigt den Schwung als Stroboskop-Aufnahme — das bedeutet du siehst EINEN einzigen Schläger dessen Bewegung in mehreren aufeinanderfolgenden Positionen eingefroren wurde. Es sind NICHT mehrere Schläger — es ist die Schwungbahn eines einzigen Schlägerkopfes der sich von hinten nach vorne bewegt. Lies alle sichtbaren Messwerte aus dem Screenshot aus. Antworte NUR mit JSON ohne Markdown: {"club":"Driver","total":200,"carry":182,"height":25,"smash":1.34,"launch":13.2,"direction":"R6.2","ballspeed":215,"clubspeed":161,"visual":"Beschreibe was du in der Stroboskop-Aufnahme erkennst: Schwungbahn des Schlägerkopfes, Ballposition, Treffpunkt, ob die Bewegungslinie flach oder steil ist"} — fehlende Werte als null.' }
+            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: uploadedBase64 } },
+            { type: 'text', text: 'Du bist ein Experte für Golfboy App Screenshots. WICHTIG: Die Golfboy App zeigt den Schwung als Stroboskop-Aufnahme — du siehst EINEN einzigen Schläger dessen Bewegung in mehreren Positionen eingefroren wurde. Lies alle Messwerte aus. NUR JSON: {"club":"Driver","total":200,"carry":182,"height":25,"smash":1.34,"launch":13.2,"direction":"R6.2","ballspeed":215,"clubspeed":161,"visual":"Beschreibe Schwungbahn, Ballposition, ob flach oder steil"} — fehlende Werte null.' }
           ]
         }]
       })
     });
     var data = await res.json();
-    var text = ((data.choices || [])[0] || {}).message && data.choices[0].message.content || '';
+    var text = (data.content && data.content[0] && data.content[0].text) || '';
     var jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       uploadedParsed = JSON.parse(jsonMatch[0]);
@@ -1137,35 +1147,57 @@ async function extractFromImage() {
 
 // ── API CALL ─────────────────────────────────────────────────────────
 async function callAPI(prompt, imgBase64) {
-  var systemMsg = {
-    role: 'system',
-    content: 'Du bist Thomas, ein erfahrener Golf-Trainer. Du sprichst deinen Schüler immer direkt an (Du-Form), warmherzig, wertschätzend und in normaler verständlicher Sprache. Antworte IMMER und AUSSCHLIESSLICH mit validem JSON. Niemals Text außerhalb des JSON.'
-  };
+  var systemContent = 'Du bist Thomas, ein erfahrener Golf-Trainer. Du sprichst deinen Schüler immer direkt an (Du-Form), warmherzig, wertschätzend und in normaler verständlicher Sprache. Antworte IMMER und AUSSCHLIESSLICH mit validem JSON. Niemals Text außerhalb des JSON.';
+
   var userContent;
   if (imgBase64) {
     userContent = [
-      { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + imgBase64 } },
+      { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imgBase64 } },
       { type: 'text', text: prompt }
     ];
   } else {
     userContent = prompt;
   }
-  var res = await fetch('https://api.openai.com/v1/chat/completions', {
+
+  var res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + API_KEY },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': API_KEY,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
     body: JSON.stringify({
-      model: 'gpt-4o',
-      max_tokens: 4500,
-      response_format: { type: 'json_object' },
-      messages: [systemMsg, { role: 'user', content: userContent }]
+      model: 'claude-sonnet-4-6',
+      max_tokens: 8000,
+      system: systemContent,
+      messages: [{ role: 'user', content: userContent }]
     })
   });
   var data = await res.json();
   if (data.error) throw new Error(data.error.message);
-  var text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content || '';
+  var text = (data.content && data.content[0] && data.content[0].text) || '';
+  // Robustes JSON-Parsing — findet das JSON auch wenn Text drumherum ist
   var jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) throw new Error('Keine gültige Antwort – bitte nochmal versuchen.');
-  return JSON.parse(jsonMatch[0]);
+  // JSON reparieren falls abgeschnitten
+  var jsonStr = jsonMatch[0];
+  try {
+    return JSON.parse(jsonStr);
+  } catch(e) {
+    // Versuche abgeschnittenes JSON zu reparieren
+    var fixed = jsonStr
+      .replace(/,\s*$/, '')           // trailing comma
+      .replace(/,\s*\]/, ']')         // comma before ]
+      .replace(/,\s*\}/, '}');        // comma before }
+    // Schließe offene Arrays und Objekte
+    var opens = (fixed.match(/\[/g)||[]).length - (fixed.match(/\]/g)||[]).length;
+    var openObj = (fixed.match(/\{/g)||[]).length - (fixed.match(/\}/g)||[]).length;
+    for(var i=0;i<opens;i++) fixed += ']';
+    for(var j=0;j<openObj;j++) fixed += '}';
+    try { return JSON.parse(fixed); }
+    catch(e2) { throw new Error('JSON Fehler – bitte nochmal versuchen.'); }
+  }
 }
 
 // ── PROMPTS ──────────────────────────────────────────────────────────
